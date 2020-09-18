@@ -160,8 +160,17 @@ export const getPackage = async (): Promise<any> => {
   }
 
   return {
+    name: appDisplayName,
+    version: "0.0.1",
+    private: true,
+    license: "UNLICENSED",
+    scripts: {
+      build: "fitbit-build",
+      debug: "fitbit",
+    },
     devDependencies: {
       "@fitbit/sdk": "~4.2.0",
+      "@fitbit/sdk-cli": "^1.7.3",
     },
     fitbit: {
       appUUID: uuidv4(),
