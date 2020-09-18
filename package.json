@@ -1,0 +1,58 @@
+{
+  "name": "fitbit-sdk-scaffolding",
+  "displayName": "Fitbit SDK Scaffolding",
+  "publisher": "smorchon",
+  "repository": "https://github.com/SergioMorchon/fitbit-sdk-scaffolding",
+  "description": "Easily create from scratch high quality Fitbit SDK projects",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.49.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:fitbit-sdk-scaffolding.addTypes",
+    "onCommand:fitbit-sdk-scaffolding.create"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "fitbit-sdk-scaffolding.addTypes",
+        "title": "Add TypeScript",
+        "category": "Fitbit SDK Scaffolding"
+      },
+      {
+        "command": "fitbit-sdk-scaffolding.create",
+        "title": "Create new project",
+        "category": "Fitbit SDK Scaffolding"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.0.0",
+    "@types/node": "^14.0.27",
+    "@types/uuid": "^8.3.0",
+    "@types/vscode": "^1.49.0",
+    "@typescript-eslint/eslint-plugin": "^4.1.1",
+    "@typescript-eslint/parser": "^4.1.1",
+    "eslint": "^7.9.0",
+    "glob": "^7.1.6",
+    "mocha": "^8.1.3",
+    "typescript": "^4.0.2",
+    "vscode-test": "^1.4.0"
+  },
+  "dependencies": {
+    "uuid": "^8.3.0"
+  }
+}
