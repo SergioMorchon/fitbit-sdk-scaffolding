@@ -115,6 +115,7 @@ const getBuildTargets = (): Promise<readonly string[] | void> =>
         description,
       })
     );
+    picker.selectedItems = picker.items;
     picker.canSelectMany = true;
     picker.ignoreFocusOut = true;
     picker.title = "Build targets";
@@ -133,7 +134,7 @@ const getBuildTargets = (): Promise<readonly string[] | void> =>
     picker.show();
   });
 
-export const getPackage = async (): Promise<any> => {
+export const getPackage = async () => {
   const appType = await getAppType();
   if (!appType) {
     return;
@@ -149,7 +150,8 @@ export const getPackage = async (): Promise<any> => {
     return;
   }
 
-  const defaultLanguage = await getDefaultLanguage(languages);
+  const defaultLanguage =
+    languages.length > 1 ? await getDefaultLanguage(languages) : languages[0];
   if (!defaultLanguage) {
     return;
   }
@@ -160,7 +162,10 @@ export const getPackage = async (): Promise<any> => {
   }
 
   return {
-    name: appDisplayName,
+    name: appDisplayName
+      .toLowerCase()
+      .replace(/\s/g, "-")
+      .replace(/[^-._a-z\d]/g, ""),
     version: "0.0.1",
     private: true,
     license: "UNLICENSED",

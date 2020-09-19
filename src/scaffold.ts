@@ -1,8 +1,9 @@
 import { exec } from "child_process";
-import { mkdirSync, writeFileSync } from "fs";
+import { writeFile, mkdir } from "fs";
+import { join } from "path";
 import * as vscode from "vscode";
 
-const execAsync = (command: string): Promise<void> =>
+const execAsync = (command: string) =>
   new Promise((resolve, reject) => {
     exec(command, { cwd: vscode.workspace.rootPath }, (error) => {
       if (error) {
@@ -13,69 +14,119 @@ const execAsync = (command: string): Promise<void> =>
     });
   });
 
-export const scaffoldNewProject = async (pkg: any) => {
-  writeFileSync(
-    `${vscode.workspace.rootPath}/package.json`,
-    JSON.stringify(pkg, null, "\t")
-  );
+const getRootPath = () => {
+  const [folder] = vscode.workspace.workspaceFolders || [];
+  if (!folder.uri) {
+    return;
+  }
 
-  writeFileSync(
-    `${vscode.workspace.rootPath}/tsconfig.json`,
-    `{
+  return folder.uri.fsPath;
+};
+
+const writeFileAsync = (path: string, content: string) =>
+  new Promise((resolve, reject) => {
+    const rootPath = getRootPath();
+    if (!rootPath) {
+      reject();
+      return;
+    }
+
+    writeFile(join(rootPath, path), content, (error) => {
+      if (error) {
+        reject();
+      } else {
+        resolve();
+      }
+    });
+  });
+
+const mkdirAsync = (path: string) =>
+  new Promise((resolve, reject) => {
+    const rootPath = getRootPath();
+    if (!rootPath) {
+      reject();
+      return;
+    }
+
+    mkdir(join(rootPath, path), (error) => {
+      if (error) {
+        reject();
+      } else {
+        resolve();
+      }
+    });
+  });
+
+export const scaffoldNewProject = async (
+  pkg: any,
+  progress: vscode.Progress<{ message?: string; increment?: number }>
+) => {
+  progress.report({
+    message: "new files",
+  });
+  await Promise.all([
+    mkdirAsync("app"),
+    mkdirAsync("companion"),
+    mkdirAsync("settings"),
+    mkdirAsync("resources"),
+  ]);
+
+  await Promise.all([
+    writeFileAsync(
+      ".gitignore",
+      `node_modules
+build`
+    ),
+    writeFileAsync("package.json", JSON.stringify(pkg, null, "\t")),
+    writeFileAsync(
+      "tsconfig.json",
+      `{
   "extends": "./node_modules/@fitbit/sdk/sdk-tsconfig.json"
 }`
-  );
-
-  mkdirSync(`${vscode.workspace.rootPath}/app`);
-  writeFileSync(
-    `${vscode.workspace.rootPath}/app/index.ts`,
-    `console.log('Hello, world')`
-  );
-
-  mkdirSync(`${vscode.workspace.rootPath}/companion`);
-  writeFileSync(
-    `${vscode.workspace.rootPath}/companion/index.ts`,
-    `import { settingsStorage } from 'settings';
+    ),
+    writeFileAsync(join("app", "index.ts"), `console.log('Hello, world')`),
+    writeFileAsync(
+      join("companion", "index.ts"),
+      `import { settingsStorage } from 'settings';
 
 settingsStorage.setItem('myProp', 'Hello, world');
 console.log('Hello, world')`
-  );
-
-  mkdirSync(`${vscode.workspace.rootPath}/settings`);
-  writeFileSync(
-    `${vscode.workspace.rootPath}/settings/index.tsx`,
-    `registerSettingsPage(({ settings: { myProp } }) => (
+    ),
+    writeFileAsync(
+      join("settings", "index.tsx"),
+      `registerSettingsPage(({ settings: { myProp } }) => (
     <Page>
         <Section title="Settings">{myProp && <Text>{myProp}</Text>}</Section>
     </Page>
 ));`
-  );
-
-  mkdirSync(`${vscode.workspace.rootPath}/resources`);
-  writeFileSync(
-    `${vscode.workspace.rootPath}/resources/index.gui`,
-    "<svg></svg>"
-  );
-  writeFileSync(`${vscode.workspace.rootPath}/resources/styles.css`, "");
-  writeFileSync(
-    `${vscode.workspace.rootPath}/resources/widgets.gui`,
-    `<svg>
+    ),
+    writeFileAsync(join("resources", "index.gui"), "<svg></svg>"),
+    writeFileAsync(join("resources", "styles.css"), ""),
+    writeFileAsync(
+      join("resources", "widgets.gui"),
+      `<svg>
   <defs>
     <link rel="stylesheet" href="styles.css" />
     <link rel="import" href="/mnt/sysassets/widgets_common.gui" />
   </defs>
 </svg>`
-  );
+    ),
+  ]);
 
-  writeFileSync(
-    `${vscode.workspace.rootPath}/.gitignore`,
-    `node_modules
-build`
-  );
-
+  progress.report({
+    message: "dependencies",
+  });
   await execAsync("npm install");
+
+  progress.report({
+    message: "Fibtit SDK Types",
+  });
   await execAsync("npx fitbit-sdk-types");
+
   try {
+    progress.report({
+      message: "Git repository",
+    });
     await execAsync("git init");
   } catch {}
 };

@@ -16,9 +16,9 @@ export const activate = (context: vscode.ExtensionContext) => {
           {
             cancellable: false,
             location: vscode.ProgressLocation.Notification,
-            title: "Creating...",
+            title: `Creating ${pkg.fitbit.appDisplayName}`,
           },
-          () => scaffoldNewProject(pkg)
+          (progress) => scaffoldNewProject(pkg, progress)
         );
       }
     ),
