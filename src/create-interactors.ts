@@ -1,6 +1,25 @@
 import * as vscode from "vscode";
 import { v4 as uuidv4 } from "uuid";
 
+const availableSdkVersions = ["5.0", "4.2"];
+
+const getSdkVersion = (): Promise<string | void> =>
+  new Promise((resolve) => {
+    const picker = vscode.window.createQuickPick();
+    picker.ignoreFocusOut = true;
+    picker.items = availableSdkVersions.map((label) => ({ label }));
+    picker.title = "SDK Version";
+
+    picker.onDidAccept(() => {
+      resolve(picker.selectedItems[0].label);
+      picker.hide();
+    });
+    picker.onDidHide(() => {
+      resolve();
+    });
+    picker.show();
+  });
+
 const availableAppTypes = ["app", "clockface"];
 
 const getAppType = (): Promise<string | void> =>
@@ -99,17 +118,24 @@ const getDefaultLanguage = (
     picker.show();
   });
 
-const availableBuildTargetOptions = {
+const oldTargets = {
   higgs: "Fitbit Ionic",
   meson: "Fitbit Versa",
   gemini: "Fitbit Versa Lite",
   mira: "Fitbit Versa 2",
 };
 
-const getBuildTargets = (): Promise<readonly string[] | void> =>
+const targets = {
+  atlas: "Fitbit Versa 3",
+  vulcan: "Fitbit Sense",
+};
+
+const getBuildTargets = (
+  sdkVersion: string
+): Promise<readonly string[] | void> =>
   new Promise((resolve) => {
     const picker = vscode.window.createQuickPick();
-    picker.items = Object.entries(availableBuildTargetOptions).map(
+    picker.items = Object.entries(sdkVersion < "5." ? oldTargets : targets).map(
       ([label, description]) => ({
         label,
         description,
@@ -135,6 +161,11 @@ const getBuildTargets = (): Promise<readonly string[] | void> =>
   });
 
 export const getPackage = async () => {
+  const sdkVersion = await getSdkVersion();
+  if (!sdkVersion) {
+    return;
+  }
+
   const appType = await getAppType();
   if (!appType) {
     return;
@@ -156,7 +187,7 @@ export const getPackage = async () => {
     return;
   }
 
-  const buildTargets = await getBuildTargets();
+  const buildTargets = await getBuildTargets(sdkVersion);
   if (!buildTargets) {
     return;
   }
@@ -174,7 +205,7 @@ export const getPackage = async () => {
       debug: "fitbit",
     },
     devDependencies: {
-      "@fitbit/sdk": "~4.2.0",
+      "@fitbit/sdk": `~${sdkVersion}`,
       "@fitbit/sdk-cli": "^1.7.3",
     },
     fitbit: {

@@ -2,6 +2,7 @@ import { exec } from "child_process";
 import { writeFile, mkdir } from "fs";
 import { join } from "path";
 import * as vscode from "vscode";
+import { getContents } from "./contents";
 
 const execAsync = (command: string) =>
   new Promise((resolve, reject) => {
@@ -57,6 +58,19 @@ const mkdirAsync = (path: string) =>
     });
   });
 
+const writeContentDeep = async (content: any, path: string = "") =>
+  await Promise.all(
+    Object.entries(content).map(async ([key, value]) => {
+      const currentPath = join(path, key);
+      if (typeof value === "string") {
+        await writeFileAsync(currentPath, value);
+      } else {
+        await mkdirAsync(currentPath);
+        await writeContentDeep(value, currentPath);
+      }
+    })
+  );
+
 export const scaffoldNewProject = async (
   pkg: any,
   progress: vscode.Progress<{ message?: string; increment?: number }>
@@ -64,54 +78,8 @@ export const scaffoldNewProject = async (
   progress.report({
     message: "new files",
   });
-  await Promise.all([
-    mkdirAsync("app"),
-    mkdirAsync("companion"),
-    mkdirAsync("settings"),
-    mkdirAsync("resources"),
-  ]);
 
-  await Promise.all([
-    writeFileAsync(
-      ".gitignore",
-      `node_modules
-build`
-    ),
-    writeFileAsync("package.json", JSON.stringify(pkg, null, "\t")),
-    writeFileAsync(
-      "tsconfig.json",
-      `{
-  "extends": "./node_modules/@fitbit/sdk/sdk-tsconfig.json"
-}`
-    ),
-    writeFileAsync(join("app", "index.ts"), `console.log('Hello, world')`),
-    writeFileAsync(
-      join("companion", "index.ts"),
-      `import { settingsStorage } from 'settings';
-
-settingsStorage.setItem('myProp', 'Hello, world');
-console.log('Hello, world')`
-    ),
-    writeFileAsync(
-      join("settings", "index.tsx"),
-      `registerSettingsPage(({ settings: { myProp } }) => (
-    <Page>
-        <Section title="Settings">{myProp && <Text>{myProp}</Text>}</Section>
-    </Page>
-));`
-    ),
-    writeFileAsync(join("resources", "index.gui"), "<svg></svg>"),
-    writeFileAsync(join("resources", "styles.css"), ""),
-    writeFileAsync(
-      join("resources", "widgets.gui"),
-      `<svg>
-  <defs>
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="import" href="/mnt/sysassets/widgets_common.gui" />
-  </defs>
-</svg>`
-    ),
-  ]);
+  await writeContentDeep(getContents({ pkg }));
 
   progress.report({
     message: "dependencies",
