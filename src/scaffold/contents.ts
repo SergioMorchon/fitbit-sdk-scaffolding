@@ -1,6 +1,6 @@
 const stringify = (content: any) => JSON.stringify(content, null, "\t");
 
-const isSdk4 = (pkg: any) =>
+export const isSdk4 = (pkg: any) =>
   pkg.devDependencies["@fitbit/sdk"].replace(/[^.\d]/g, "").startsWith("4");
 
 const styles = {

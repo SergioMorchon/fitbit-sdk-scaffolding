@@ -2,7 +2,7 @@ import { exec } from "child_process";
 import { writeFile, mkdir } from "fs";
 import { join } from "path";
 import * as vscode from "vscode";
-import { getContents } from "./contents";
+import { getContents, isSdk4 } from "./contents";
 
 const execAsync = (command: string) =>
   new Promise((resolve, reject) => {
@@ -89,7 +89,7 @@ export const scaffoldNewProject = async (
   progress.report({
     message: "Fibtit SDK Types",
   });
-  await execAsync("npx fitbit-sdk-types");
+  await execAsync(`npx fitbit-sdk-types@SDK-${isSdk4(pkg) ? "4.2" : "5.0"}`);
 
   try {
     progress.report({
