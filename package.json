@@ -4,7 +4,7 @@
   "publisher": "smorchon",
   "repository": "https://github.com/SergioMorchon/fitbit-sdk-scaffolding",
   "description": "Easily create from scratch high quality Fitbit SDK projects",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "engines": {
     "vscode": "^1.49.0"
   },
