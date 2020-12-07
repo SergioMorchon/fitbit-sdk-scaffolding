@@ -210,7 +210,7 @@ export const getPackage = async () => {
     },
     fitbit: {
       appUUID: uuidv4(),
-      appType: "app",
+      appType: appType,
       appDisplayName,
       iconFile: "resources/icon.png",
       wipeColor: "#8bc34a",
